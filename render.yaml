@@ -1,10 +1,17 @@
-- type: web
-    name: ecommerce-api
-    runtime: docker
+services:
+  # PostgreSQL Database (Managed by Render)
+  - type: pgaas
+    name: ecommerce-db
     plan: starter
-    buildCommand: docker build -t ecommerce-api .
-    startCommand: python -m main
-=======
+    ipAllowList: []  # Only accessible by other services in this project
+
+  # Redis Cache (Managed by Render)
+  - type: redis
+    name: ecommerce-redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []  # Only accessible by other services in this project
+
   # FastAPI Web Service
   - type: web
     name: ecommerce-api
@@ -12,3 +19,37 @@
     plan: starter
     buildCommand: docker build -t ecommerce-api .
     startCommand: python run_migrations.py && python -m main
+    envVars:
+      - key: DATABASE_URL
+        fromService:
+          type: pgaas
+          name: ecommerce-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ecommerce-redis
+          property: connectionString
+      - key: LOG_LEVEL
+        value: INFO
+      - key: CORS_ORIGINS
+        value: https://tu-frontend.vercel.app  # Replace with your Vercel domain
+      - key: RATE_LIMIT_ENABLED
+        value: true
+      - key: RATE_LIMIT_CALLS
+        value: 100
+      - key: RATE_LIMIT_PERIOD
+        value: 60
+      - key: DB_POOL_SIZE
+        value: 10
+      - key: DB_MAX_OVERFLOW
+        value: 20
+      - key: REDIS_CACHE_TTL
+        value: 300
+      - key: REDIS_ENABLED
+        value: true
+    healthCheckPath: /health_check
+    disk:
+      name: logs
+      mountPath: /app/logs
+      sizeGB: 1
