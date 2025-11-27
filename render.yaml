@@ -1,10 +1,4 @@
 services:
-  # PostgreSQL Database (Managed by Render)
-  - type: postgres
-    name: ecommerce-db
-    plan: starter
-    ipAllowList: []  # Only accessible by other services in this project
-
   # Redis Cache (Managed by Render)
   - type: redis
     name: ecommerce-redis
@@ -21,10 +15,7 @@ services:
     startCommand: python run_migrations.py && python -m main
     envVars:
       - key: DATABASE_URL
-        fromService:
-          type: postgres
-          name: ecommerce-db
-          property: connectionString
+        value: ${DATABASE_URL}  # Set this manually in Render dashboard
       - key: REDIS_URL
         fromService:
           type: redis
