@@ -1,6 +1,6 @@
 services:
   # PostgreSQL Database (Managed by Render)
-  - type: pgaas
+  - type: postgres
     name: ecommerce-db
     plan: starter
     ipAllowList: []  # Only accessible by other services in this project
@@ -22,7 +22,7 @@ services:
     envVars:
       - key: DATABASE_URL
         fromService:
-          type: pgaas
+          type: postgres
           name: ecommerce-db
           property: connectionString
       - key: REDIS_URL
@@ -33,7 +33,7 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: CORS_ORIGINS
-        value: https://tu-frontend.vercel.app  # Replace with your Vercel domain
+        value: https://vite-react-vert-one-41.vercel.app/  # Replace with your Vercel domain
       - key: RATE_LIMIT_ENABLED
         value: true
       - key: RATE_LIMIT_CALLS
