@@ -1,0 +1,14 @@
+- type: web
+    name: ecommerce-api
+    runtime: docker
+    plan: starter
+    buildCommand: docker build -t ecommerce-api .
+    startCommand: python -m main
+=======
+  # FastAPI Web Service
+  - type: web
+    name: ecommerce-api
+    runtime: docker
+    plan: starter
+    buildCommand: docker build -t ecommerce-api .
+    startCommand: python run_migrations.py && python -m main

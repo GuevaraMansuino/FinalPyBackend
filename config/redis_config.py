@@ -36,13 +36,37 @@ class RedisConfig:
 
     def _initialize_client(self):
         """Initialize Redis client with connection pool"""
-        redis_host = os.getenv('REDIS_HOST', 'localhost')
-        redis_port = int(os.getenv('REDIS_PORT', '6379'))
-        redis_db = int(os.getenv('REDIS_DB', '0'))
-        redis_password = os.getenv('REDIS_PASSWORD', None)
-        max_connections = int(os.getenv('REDIS_MAX_CONNECTIONS', '50'))
+        redis_url = os.getenv('REDIS_URL')
 
-        try:
+        if redis_url:
+            # Parse Redis URL (Render provides full connection string)
+            try:
+                from urllib.parse import urlparse
+                parsed = urlparse(redis_url)
+
+                max_connections = int(os.getenv('REDIS_MAX_CONNECTIONS', '50'))
+
+                # Create connection pool from URL
+                self._pool = ConnectionPool.from_url(
+                    redis_url,
+                    max_connections=max_connections,
+                    decode_responses=True,
+                    socket_timeout=5,
+                    socket_connect_timeout=5,
+                    retry_on_timeout=True
+                )
+            except Exception as e:
+                logger.error(f"Failed to parse REDIS_URL: {e}")
+                self._client = None
+                return
+        else:
+            # Fallback to individual environment variables (local development)
+            redis_host = os.getenv('REDIS_HOST', 'localhost')
+            redis_port = int(os.getenv('REDIS_PORT', '6379'))
+            redis_db = int(os.getenv('REDIS_DB', '0'))
+            redis_password = os.getenv('REDIS_PASSWORD', None)
+            max_connections = int(os.getenv('REDIS_MAX_CONNECTIONS', '50'))
+
             # Create connection pool
             self._pool = ConnectionPool(
                 host=redis_host,
@@ -56,19 +80,15 @@ class RedisConfig:
                 retry_on_timeout=True
             )
 
-            # Create Redis client
+        # Create Redis client
+        try:
             self._client = redis.Redis(connection_pool=self._pool)
-
             # Test connection
             self._client.ping()
-            logger.info(f"✅ Redis connected successfully: {redis_host}:{redis_port} (DB: {redis_db})")
-
-        except redis.ConnectionError as e:
+            logger.info("✅ Redis connected successfully")
+        except Exception as e:
             logger.warning(f"⚠️  Redis connection failed: {e}")
             logger.warning("Application will run without caching")
-            self._client = None
-        except Exception as e:
-            logger.error(f"❌ Redis initialization error: {e}")
             self._client = None
 
     def get_client(self) -> Optional[redis.Redis]:
