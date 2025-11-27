@@ -114,7 +114,7 @@ def create_fastapi_app() -> FastAPI:
         if check_redis_connection():
             logger.info("✅ Redis cache is available")
         else:
-            logger.warning("⚠️  Redis cache is NOT available - running without cache")
+            logger.warning("⚠️  Redis cache is NOT available - running without cache")
 
     # Shutdown event: Graceful shutdown
     @fastapi_app.on_event("shutdown")
@@ -146,8 +146,8 @@ def run_app(fastapi_app: FastAPI):
 
 
 if __name__ == "__main__":
-    # Create database tables on startup
-    create_tables()
+    # IMPORTANTE: Se elimina la llamada a create_tables() de aquí.
+    # Ahora la inicialización de la BD la maneja el script start.sh.
 
     # Create and run FastAPI application
     app = create_fastapi_app()
