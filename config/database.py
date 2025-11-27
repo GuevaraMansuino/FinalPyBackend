@@ -23,12 +23,31 @@ logger = logging.getLogger(__name__)
 env_path = os.path.join(os.path.dirname(__file__), '../.env')
 load_dotenv(env_path)
 
-# Database configuration with defaults
-POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
-POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
-POSTGRES_DB = os.getenv('POSTGRES_DB', 'postgres')
-POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'postgres')
+# =========================================================
+# MODIFICACIÓN CRÍTICA: PRIORIZAR DATABASE_URL DE ENTORNO (Render)
+# =========================================================
+
+# 1. Intentar leer la URL de conexión completa (ej. la de Render)
+DATABASE_URL_FULL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL_FULL is None:
+    # 2. Si no existe la URL completa, construirla usando los valores por defecto (localhost).
+    logger.warning("DATABASE_URL no encontrada. Usando variables POSTGRES individuales (default: localhost).")
+
+    POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
+    POSTGRES_PORT = os.getenv('POSTGRES_PORT', '5432')
+    POSTGRES_DB = os.getenv('POSTGRES_DB', 'postgres')
+    POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
+    POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'postgres')
+    
+    # Construir la URI a partir de las variables individuales
+    DATABASE_URI = f'postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}'
+else:
+    # 3. Si DATABASE_URL existe, la usamos directamente.
+    logger.info("DATABASE_URL encontrada. Usando URL de producción/Render.")
+    DATABASE_URI = DATABASE_URL_FULL
+
+# =========================================================
 
 # High-performance connection pool configuration
 # For 400 concurrent requests with 4 workers: 400/4 = 100 connections per worker
@@ -37,8 +56,6 @@ POOL_SIZE = int(os.getenv('DB_POOL_SIZE', '50'))  # Base pool size per worker
 MAX_OVERFLOW = int(os.getenv('DB_MAX_OVERFLOW', '100'))  # Additional connections during peak
 POOL_TIMEOUT = int(os.getenv('DB_POOL_TIMEOUT', '10'))  # Wait time for connection (reduced for production)
 POOL_RECYCLE = int(os.getenv('DB_POOL_RECYCLE', '3600'))  # Recycle connections after 1 hour
-
-DATABASE_URI = f'postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}'
 
 # Create engine with optimized connection pooling for high concurrency
 engine = create_engine(
@@ -60,11 +77,6 @@ def get_db() -> Generator[Session, None, None]:
     """
     Dependency injection for database sessions.
     Creates a new session for each request and closes it when done.
-
-    Usage:
-        @app.get("/items")
-        def get_items(db: Session = Depends(get_db)):
-            return db.query(Item).all()
     """
     db = SessionLocal()
     try:
@@ -80,6 +92,7 @@ def create_tables():
         logger.info("Tables created successfully.")
     except Exception as e:
         logger.error(f"Error creating tables: {e}")
+        # Lanzamos la excepción para que el script de inicialización se detenga
         raise
 
 
