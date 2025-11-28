@@ -84,21 +84,22 @@ def create_fastapi_app() -> FastAPI:
 
     fastapi_app.include_router(health_check_controller, prefix="/health_check")
 
-    # Add middleware (LIFO order - last added runs first)
-    # Request ID middleware runs FIRST (innermost) to capture all logs
-    fastapi_app.add_middleware(RequestIDMiddleware)
-    logger.info("✅ Request ID middleware enabled (distributed tracing)")
-
     # CORS Configuration
     cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
     fastapi_app.add_middleware(
         CORSMiddleware,
-        allow_origins=cors_origins if cors_origins != ["*"] else ["*"],
+        allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
     logger.info(f"✅ CORS enabled for origins: {cors_origins}")
+    
+    # Add other middleware (LIFO order - last added runs first)
+    # Request ID middleware should be after CORS to ensure it's closer to the app logic
+    fastapi_app.add_middleware(RequestIDMiddleware)
+    logger.info("✅ Request ID middleware enabled (distributed tracing)")
+
 
     # Rate limiting: 100 requests per 60 seconds per IP (configurable via env)
     fastapi_app.add_middleware(RateLimiterMiddleware, calls=100, period=60)
