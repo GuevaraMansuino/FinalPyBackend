@@ -12,6 +12,7 @@ services:
     runtime: docker
     plan: starter
     buildCommand: docker build -t ecommerce-api .
+    startCommand: python run_migrations.py && python -m main
     envVars:
       - key: DATABASE_URL
         value: postgresql://ecommerce_oq8u_user:A7sRYgeDJvyT3lKAdYs5JzTX5twHnyi9@dpg-d4k9r84hg0os73ajqom0-a.oregon-postgres.render.com/ecommerce_oq8u  # Reemplaza con tu External Database URL

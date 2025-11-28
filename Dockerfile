@@ -52,5 +52,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 # Expose port
 EXPOSE 8000
 
-# Run database migrations and then start the main application
-CMD ["sh", "-c", "python run_migrations.py && python -m main"]
+# Run main.py when the container launches
+CMD ["python", "-m", "main"]
