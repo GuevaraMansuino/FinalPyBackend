@@ -1,18 +1,18 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
 
 class CategoryBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+
+class CategoryCreateSchema(CategoryBase):
+    pass
+
+class CategorySchema(CategoryBase):
+    id_key: int
+    class Config:
+        from_attributes = True
+
+class CategoryShort(BaseModel):
+    id_key: int
     name: str
-    description: Optional[str] = None
-
-class CategoryCreate(CategoryBase):
-    pass
-
-class CategoryUpdate(CategoryBase):
-    pass
-
-class CategorySimple(CategoryBase):
-    id: int
-
     class Config:
         from_attributes = True

@@ -1,8 +1,9 @@
 """
-BaseRepository implementation with safe ORM return values (no Pydantic validation here).
+BaseRepository implementation with best practices and sanitized logging
+(versión adaptada: siempre devuelve MODELOS ORM. No usar model_validate aquí).
 """
 import logging
-from typing import Type, List, Optional
+from typing import Type, List
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
@@ -11,20 +12,10 @@ from repositories.base_repository import BaseRepository
 from schemas.base_schema import BaseSchema
 from utils.logging_utils import get_sanitized_logger
 
-
 class InstanceNotFoundError(Exception):
     pass
 
-
 class BaseRepositoryImpl(BaseRepository):
-    """
-    Base Repository Implementation.
-
-    IMPORTANT: This repository returns **ORM model instances** (or lists of them).
-    It DOES NOT call Pydantic `.model_validate()` on ORM objects to avoid recursion loops.
-    The controller/service layer should convert ORM -> Pydantic schema using *safe* output schemas.
-    """
-
     def __init__(self, model: Type[BaseModel], schema: Type[BaseSchema], db: Session):
         self._model = model
         self._schema = schema
@@ -43,53 +34,38 @@ class BaseRepositoryImpl(BaseRepository):
     def schema(self) -> Type[BaseSchema]:
         return self._schema
 
-    # -------------------------
-    # Read
-    # -------------------------
-    def find(self, id_key: int) -> BaseModel:
-        """Return ORM model instance or raise InstanceNotFoundError."""
+    def find(self, id_key: int):
+        """
+        Return ORM model instance or raise InstanceNotFoundError.
+        NOTA: NO convertimos a schema aquí (evita recursion loop).
+        """
         try:
             stmt = select(self.model).where(self.model.id_key == id_key)
-            model = self.session.scalars(stmt).first()
-
-            if model is None:
+            instance = self.session.scalars(stmt).first()
+            if instance is None:
                 raise InstanceNotFoundError(f"{self.model.__name__} with id {id_key} not found")
-
-            # Return ORM model (no pydantic validation here)
-            return model
+            return instance
         except InstanceNotFoundError:
             raise
         except Exception as e:
             self.logger.error(f"Error finding {self.model.__name__} with id {id_key}: {e}")
             raise
 
-    def find_all(self, skip: int = 0, limit: int = 100) -> List[BaseModel]:
-        """Return list of ORM model instances (pagination)."""
-        from config.constants import PaginationConfig
-
+    def find_all(self, skip: int = 0, limit: int = 100) -> List:
+        """
+        Return list of ORM model instances (no validation here).
+        """
         try:
-            if skip < 0:
-                raise ValueError("skip must be >= 0")
-            if limit < PaginationConfig.MIN_LIMIT:
-                raise ValueError(f"limit must be >= {PaginationConfig.MIN_LIMIT}")
-            if limit > PaginationConfig.MAX_LIMIT:
-                self.logger.warning(f"limit {limit} > max, capping to {PaginationConfig.MAX_LIMIT}")
-                limit = PaginationConfig.MAX_LIMIT
-
             stmt = select(self.model).offset(skip).limit(limit)
             models = self.session.scalars(stmt).all()
-            return models  # list of ORM models
+            return models
         except Exception as e:
             self.logger.error(f"Error finding all {self.model.__name__}: {e}")
             raise
 
-    # -------------------------
-    # Create / Update / Delete
-    # -------------------------
-    def save(self, model: BaseModel) -> BaseModel:
+    def save(self, model: BaseModel):
         """
-        Save a new ORM model and return the ORM model (refreshed).
-        Do NOT validate with Pydantic here.
+        Persist ORM model and RETURN the ORM model (no model_validate).
         """
         try:
             self.session.add(model)
@@ -101,29 +77,27 @@ class BaseRepositoryImpl(BaseRepository):
             self.logger.error(f"Error saving {self.model.__name__}: {e}")
             raise
 
-    def update(self, id_key: int, changes: dict) -> BaseModel:
+    def update(self, id_key: int, changes: dict):
         """
-        Update the ORM instance and return the updated ORM model.
-        'changes' must be a dict of column values (already vetted by service).
+        Apply changes on ORM instance and return ORM model instance.
         """
-        PROTECTED_ATTRIBUTES = {'id_key', '_sa_instance_state', '__class__', '__dict__'}
-
+        PROTECTED = {'id_key', '_sa_instance_state', '__class__', '__dict__'}
         try:
             stmt = select(self.model).where(self.model.id_key == id_key)
             instance = self.session.scalars(stmt).first()
-
             if instance is None:
                 raise InstanceNotFoundError(f"{self.model.__name__} with id {id_key} not found")
 
             allowed_columns = {col.name for col in self.model.__table__.columns}
-
             for key, value in changes.items():
                 if value is None:
                     continue
-                if key.startswith('_') or key in PROTECTED_ATTRIBUTES:
+                if key.startswith('_') or key in PROTECTED:
                     raise ValueError(f"Cannot update protected attribute: {key}")
                 if key not in allowed_columns:
                     raise ValueError(f"Invalid field for {self.model.__name__}: {key}")
+                if not hasattr(instance, key):
+                    raise ValueError(f"Field {key} not found in {self.model.__name__}")
                 setattr(instance, key, value)
 
             self.session.commit()
@@ -136,25 +110,25 @@ class BaseRepositoryImpl(BaseRepository):
             raise
         except Exception as e:
             self.session.rollback()
-            self.logger.error(f"Error updating {self.model.__name__} id {id_key}: {e}")
+            self.logger.error(f"Error updating {self.model.__name__} with id {id_key}: {e}")
             raise
 
     def remove(self, id_key: int) -> None:
         try:
             stmt = select(self.model).where(self.model.id_key == id_key)
-            model = self.session.scalars(stmt).first()
-            if model is None:
+            instance = self.session.scalars(stmt).first()
+            if instance is None:
                 raise InstanceNotFoundError(f"{self.model.__name__} with id {id_key} not found")
-            self.session.delete(model)
+            self.session.delete(instance)
             self.session.commit()
         except InstanceNotFoundError:
             raise
         except Exception as e:
             self.session.rollback()
-            self.logger.error(f"Error deleting {self.model.__name__} id {id_key}: {e}")
+            self.logger.error(f"Error deleting {self.model.__name__} with id {id_key}: {e}")
             raise
 
-    def save_all(self, models: List[BaseModel]) -> List[BaseModel]:
+    def save_all(self, models: List[BaseModel]) -> List:
         try:
             self.session.add_all(models)
             self.session.commit()

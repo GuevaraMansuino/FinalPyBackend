@@ -1,22 +1,18 @@
-from pydantic import BaseModel
 from typing import Optional
-from .category_schema import CategorySimple
+from pydantic import BaseModel, Field
+from schemas.category_schema import CategoryShort
 
 class ProductBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-    price: float
-    stock: int
+    name: str = Field(..., min_length=1, max_length=100)
+    price: float = Field(..., gt=0)
+    stock: int = Field(..., ge=0)
 
-class ProductCreate(ProductBase):
+class ProductCreateSchema(ProductBase):
     category_id: int
 
-class ProductUpdate(ProductBase):
-    category_id: Optional[int]
-
-class ProductSchema(ProductBase):
-    id: int
-    category: Optional[CategorySimple] = None
-
+# Output schema (sin relaciones recursivas)
+class ProductSchemaOut(ProductBase):
+    id_key: int
+    category: Optional[CategoryShort] = None
     class Config:
         from_attributes = True
