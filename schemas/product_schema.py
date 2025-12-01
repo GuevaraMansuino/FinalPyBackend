@@ -1,24 +1,22 @@
-"""Product schema for request/response validation."""
-from typing import Optional, List, TYPE_CHECKING
-from pydantic import Field
+from pydantic import BaseModel
+from typing import Optional
+from .category_schema import CategorySimple
 
-from schemas.base_schema import BaseSchema
+class ProductBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    price: float
+    stock: int
 
-if TYPE_CHECKING:
-    from schemas.category_schema import CategorySchema
-    from schemas.order_detail_schema import OrderDetailSchema
-    from schemas.review_schema import ReviewSchema
+class ProductCreate(ProductBase):
+    category_id: int
 
+class ProductUpdate(ProductBase):
+    category_id: Optional[int]
 
-class ProductSchema(BaseSchema):
-    """Schema for Product entity with validations."""
+class ProductSchema(ProductBase):
+    id: int
+    category: Optional[CategorySimple] = None
 
-    name: str = Field(..., min_length=1, max_length=200, description="Product name (required)")
-    price: float = Field(..., gt=0, description="Product price (must be greater than 0, required)")
-    stock: int = Field(default=0, ge=0, description="Product stock quantity (must be >= 0)")
-
-    category_id: int = Field(..., description="Category ID reference (required)")
-
-    category: Optional['CategorySchema'] = None
-    reviews: Optional[List['ReviewSchema']] = []
-    order_details: Optional[List['OrderDetailSchema']] = []
+    class Config:
+        from_attributes = True

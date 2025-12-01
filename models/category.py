@@ -8,4 +8,4 @@ class CategoryModel(BaseModel):
     __tablename__ = 'categories'
 
     name = Column(String, unique=True, index=True)
-    products = relationship('ProductModel', back_populates='category', lazy="select")
+    products = relationship('ProductModel', back_populates='category', lazy="noload")

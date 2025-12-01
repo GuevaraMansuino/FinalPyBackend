@@ -1,15 +1,18 @@
-"""Category schema with validation."""
-from typing import Optional, List, TYPE_CHECKING
-from pydantic import Field
+from pydantic import BaseModel
+from typing import Optional
 
-from schemas.base_schema import BaseSchema
+class CategoryBase(BaseModel):
+    name: str
+    description: Optional[str] = None
 
-if TYPE_CHECKING:
-    from schemas.product_schema import ProductSchema
+class CategoryCreate(CategoryBase):
+    pass
 
+class CategoryUpdate(CategoryBase):
+    pass
 
-class CategorySchema(BaseSchema):
-    """Schema for Category entity with validations."""
+class CategorySimple(CategoryBase):
+    id: int
 
-    name: str = Field(..., min_length=1, max_length=100, description="Category name (required, unique)")
-    products: Optional[List['ProductSchema']] = []
+    class Config:
+        from_attributes = True

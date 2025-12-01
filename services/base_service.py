@@ -1,5 +1,5 @@
 """
-Module for Base Service
+Base service module
 """
 
 from abc import ABC, abstractmethod
@@ -16,44 +16,63 @@ class BaseService(ABC):
     @property
     @abstractmethod
     def repository(self) -> BaseRepository:
-        """
-        Repository to access database
-        """
+        """Repository to access database"""
 
     @property
     @abstractmethod
     def schema(self) -> BaseSchema:
-        """
-        Pydantic Schema to validate data
-        """
+        """Pydantic Schema to validate data"""
 
     @property
     @abstractmethod
     def model(self) -> BaseModel:
-        """
-        SQLAlchemy Model
-        """
+        """SQLAlchemy Model"""
 
-    @abstractmethod
+    # ---------------------------------------------------------------------------
+    # Métodos CRUD base
+    # ---------------------------------------------------------------------------
+
     def get_all(self) -> List[BaseSchema]:
-        """Get all"""
+        """Get all elements"""
+        instances = self.repository.get_all()
+        return [self.to_schema(instance) for instance in instances]
 
-    @abstractmethod
     def get_one(self, id_key: int) -> BaseSchema:
-        """Get by id"""
+        """Get single element"""
+        instance = self.repository.get_one(id_key)
+        return self.to_schema(instance)
 
-    @abstractmethod
-    def save(self, schema: BaseSchema) -> BaseSchema:
-        """Save"""
+    def save(self, schema_in: BaseSchema) -> BaseSchema:
+        """Create element"""
+        instance = self.to_model(schema_in)
+        saved = self.repository.save(instance)
+        return self.to_schema(saved)
 
-    @abstractmethod
-    def update(self, id_key: int, schema: BaseSchema) -> BaseSchema:
-        """Update"""
+    def update(self, id_key: int, schema_in: BaseSchema) -> BaseSchema:
+        """Update element"""
+        instance = self.to_model(schema_in)
+        updated = self.repository.update(id_key, instance)
+        return self.to_schema(updated)
 
-    @abstractmethod
     def delete(self, id_key: int) -> None:
-        """Delete"""
+        """Delete element"""
+        self.repository.delete(id_key)
 
-    @abstractmethod
+    # ---------------------------------------------------------------------------
+    # Conversión entre Schema ↔ Model
+    # ---------------------------------------------------------------------------
+
     def to_model(self, schema: BaseSchema) -> BaseModel:
-        """To model"""
+        """
+        Convert pydantic schema to SQLAlchemy model instance.
+        (Debe ser implementado por cada servicio)
+        """
+        raise NotImplementedError("Each service must implement 'to_model' method")
+
+    def to_schema(self, instance: BaseModel) -> BaseSchema:
+        """
+        Convert ORM model to Pydantic schema WITHOUT RELATIONS.
+        Se usa model_validate() pero solo con datos simples.
+        """
+        data = instance.to_dict_no_relations()
+        return self.schema.model_validate(data)

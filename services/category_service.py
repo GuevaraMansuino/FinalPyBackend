@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from models.category import CategoryModel
 from repositories.category_repository import CategoryRepository
 from schemas.category_schema import CategorySchema
+from schemas.category_schema import CategoryCreateSchema
 from services.base_service_impl import BaseServiceImpl
 from services.cache_service import cache_service
 from utils.logging_utils import get_sanitized_logger
@@ -79,7 +80,7 @@ class CategoryService(BaseServiceImpl):
 
         return category
 
-    def save(self, schema: CategorySchema) -> CategorySchema:
+    def save(self, schema: CategoryCreateSchema) -> CategorySchema:
         """Create new category and invalidate cache"""
         category = super().save(schema)
         self._invalidate_all_cache()

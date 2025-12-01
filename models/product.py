@@ -33,6 +33,7 @@ class ProductModel(BaseModel):
     name = Column(String, index=True)
     price = Column(Float, index=True)
     stock = Column(Integer, default=0, nullable=False, index=True)  # ✅ Added index
+    
     category_id = Column(Integer, ForeignKey('categories.id_key'), index=True)
 
     category = relationship(
@@ -44,11 +45,11 @@ class ProductModel(BaseModel):
         'ReviewModel',
         back_populates='product',
         cascade='all, delete-orphan',
-        lazy='select',
+        lazy='noload',
     )
     order_details = relationship(
         'OrderDetailModel',
         back_populates='product',
         cascade='all, delete-orphan',
-        lazy='select',
+        lazy='noload',
     )
