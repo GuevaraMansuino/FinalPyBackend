@@ -15,3 +15,4 @@ OrderDetailSchema.model_rebuild()
 ReviewSchema.model_rebuild()
 CategorySchema.model_rebuild()
 BillSchema.model_rebuild()
+

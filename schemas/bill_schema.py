@@ -24,3 +24,4 @@ class BillSchema(BaseSchema):
     # Relationships
     order: Optional['OrderSchema'] = None
     client: Optional['ClientSchema'] = None  # ✅ Added
+

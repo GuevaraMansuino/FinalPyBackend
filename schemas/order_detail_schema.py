@@ -36,3 +36,4 @@ class OrderDetailSchema(BaseSchema):
 
     order: Optional['OrderSchema'] = None
     product: Optional['ProductSchema'] = None
+

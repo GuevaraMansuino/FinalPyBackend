@@ -9,3 +9,4 @@ class BaseSchema(BaseModel):
         arbitrary_types_allowed = True
 
     id_key: Optional[int] = None
+

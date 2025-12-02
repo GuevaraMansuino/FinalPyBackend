@@ -24,3 +24,4 @@ class ClientSchema(BaseSchema):
     )
     addresses: Optional[List['AddressSchema']] = []
     orders: Optional[List['OrderSchema']] = []
+

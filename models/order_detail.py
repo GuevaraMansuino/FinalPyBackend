@@ -9,8 +9,8 @@ class OrderDetailModel(BaseModel):
 
     quantity = Column(Integer)
     price = Column(Float)
-    order_id = Column(Integer, ForeignKey("orders.id_key"), index=True)
-    product_id = Column(Integer, ForeignKey("products.id_key"), index=True)
+    order_id = Column(Integer, ForeignKey("orders.id"), index=True)
+    product_id = Column(Integer, ForeignKey("products.id"), index=True)
 
     order = relationship("OrderModel", back_populates="order_details", lazy="select")
     product = relationship("ProductModel", back_populates="order_details", lazy="select")

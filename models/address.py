@@ -17,5 +17,5 @@ class AddressModel(BaseModel):
     street = Column(String, index=True)
     number = Column(String)
     city = Column(String)
-    client_id = Column(Integer, ForeignKey('clients.id_key'), index=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), index=True)
     client = relationship('ClientModel', back_populates='addresses', lazy='select')

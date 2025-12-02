@@ -20,7 +20,7 @@ from models.review import ReviewModel  # noqa
 logger = logging.getLogger(__name__)
 
 # Load environment variables
-env_path = os.path.join(os.path.dirname(__file__), '../.env')
+env_path = os.path.join(os.path.dirname(__file__), '../.env.example')
 load_dotenv(env_path)
 
 # =========================================================
@@ -28,9 +28,9 @@ load_dotenv(env_path)
 # =========================================================
 
 # 1. Intentar leer la URL de conexión completa (ej. la de Render)
-DATABASE_URL_FULL = os.getenv('DATABASE_URL')
+DATABASE_URL = os.getenv('DATABASE_URL')
 
-if DATABASE_URL_FULL is None:
+if DATABASE_URL is None:
     # 2. Si no existe la URL completa, construirla usando los valores por defecto (localhost).
     logger.warning("DATABASE_URL no encontrada. Usando variables POSTGRES individuales (default: localhost).")
 
@@ -45,7 +45,7 @@ if DATABASE_URL_FULL is None:
 else:
     # 3. Si DATABASE_URL existe, la usamos directamente.
     logger.info("DATABASE_URL encontrada. Usando URL de producción/Render.")
-    DATABASE_URI = DATABASE_URL_FULL
+    DATABASE_URI = DATABASE_URL
 
 # =========================================================
 

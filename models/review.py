@@ -17,7 +17,7 @@ class ReviewModel(BaseModel):
 
     rating = Column(Float, nullable=False)
     comment = Column(String)
-    product_id = Column(Integer, ForeignKey('products.id_key'), index=True)
+    product_id = Column(Integer, ForeignKey('products.id'), index=True)
     product = relationship(
         'ProductModel', back_populates='reviews', lazy='select',
         )

@@ -12,8 +12,8 @@ class OrderModel(BaseModel):
     total = Column(Float)
     delivery_method = Column(Enum(DeliveryMethod), index=True)
     status = Column(Enum(Status), index=True)
-    client_id = Column(Integer, ForeignKey('clients.id_key'), index=True)
-    bill_id = Column(Integer, ForeignKey('bills.id_key'), index=True)
+    client_id = Column(Integer, ForeignKey('clients.id'), index=True)
+    bill_id = Column(Integer, ForeignKey('bills.id'), index=True)
 
     order_details = relationship("OrderDetailModel", back_populates="order", cascade="all, delete-orphan",
                                  lazy="select")

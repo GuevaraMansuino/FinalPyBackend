@@ -30,3 +30,5 @@ class ReviewSchema(BaseSchema):
     )
 
     product: Optional['ProductSchema'] = None
+
+

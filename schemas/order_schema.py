@@ -16,3 +16,5 @@ class OrderSchema(BaseSchema):
     status: Status = Field(default=Status.PENDING, description="Order status")
     client_id: int = Field(..., description="Client ID reference (required)")
     bill_id: int = Field(..., description="Bill ID reference (required)")
+
+

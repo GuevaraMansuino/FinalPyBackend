@@ -9,4 +9,4 @@ class BaseModel(base):
 
     __abstract__ = True
 
-    id_key = Column(Integer, primary_key=True, autoincrement=True) 
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
