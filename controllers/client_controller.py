@@ -1,6 +1,6 @@
 """Client controller with proper dependency injection."""
 from controllers.base_controller_impl import BaseControllerImpl
-from schemas.client_schema import ClientSchema
+from schemas.client_schema import ClientSchema, ClientCreateSchema
 from services.client_service import ClientService
 
 
@@ -16,5 +16,6 @@ class ClientController(BaseControllerImpl):
         super().__init__(
             schema=ClientSchema,
             service_factory=lambda db: ClientService(db),
-            tags=["Clients"]
+            tags=["Clients"],
+            create_schema=ClientCreateSchema
         )

@@ -18,8 +18,9 @@ class BaseControllerImpl(BaseController):
     def __init__(
         self,
         schema: Type[BaseSchema],
-        service_factory: Callable[[Session], 'BaseService'],
-        tags: List[str] = None
+        service_factory: Callable[[Session], 'BaseService'], # type: ignore
+        tags: List[str] = None,
+        create_schema: Type[BaseSchema] = None
     ):
         """
         Initialize the controller with dependency injection support.
@@ -28,8 +29,10 @@ class BaseControllerImpl(BaseController):
             schema: The Pydantic schema class for validation
             service_factory: A callable that creates a service instance given a DB session
             tags: Optional list of tags for API documentation
+            create_schema: Optional schema for create operations (defaults to schema)
         """
         self.schema = schema
+        self.create_schema = create_schema or schema
         self.service_factory = service_factory
         self.router = APIRouter(tags=tags or [])
 
@@ -39,7 +42,6 @@ class BaseControllerImpl(BaseController):
     def _register_routes(self):
         """Register all CRUD routes with proper dependency injection."""
 
-        @self.router.get("/", response_model=List[self.schema], status_code=status.HTTP_200_OK)
         async def get_all(
             skip: int = 0,
             limit: int = 100,
@@ -49,7 +51,6 @@ class BaseControllerImpl(BaseController):
             service = self.service_factory(db)
             return service.get_all(skip=skip, limit=limit)
 
-        @self.router.get("/{id_key}", response_model=self.schema, status_code=status.HTTP_200_OK)
         async def get_one(
             id_key: int,
             db: Session = Depends(get_db)
@@ -58,26 +59,23 @@ class BaseControllerImpl(BaseController):
             service = self.service_factory(db)
             return service.get_one(id_key)
 
-        @self.router.post("/", response_model=self.schema, status_code=status.HTTP_201_CREATED)
         async def create(
-            schema_in: self.schema,
+            schema_in: self.create_schema, # type: ignore
             db: Session = Depends(get_db)
         ):
             """Create a new record."""
             service = self.service_factory(db)
             return service.save(schema_in)
 
-        @self.router.put("/{id_key}", response_model=self.schema, status_code=status.HTTP_200_OK)
         async def update(
             id_key: int,
-            schema_in: self.schema,
+            schema_in: self.schema, # type: ignore
             db: Session = Depends(get_db)
         ):
             """Update an existing record."""
             service = self.service_factory(db)
             return service.update(id_key, schema_in)
 
-        @self.router.delete("/{id_key}", status_code=status.HTTP_204_NO_CONTENT)
         async def delete(
             id_key: int,
             db: Session = Depends(get_db)
@@ -86,3 +84,9 @@ class BaseControllerImpl(BaseController):
             service = self.service_factory(db)
             service.delete(id_key)
             return None
+
+        self.router.add_api_route("/", get_all, methods=["GET"], response_model=List[self.schema])
+        self.router.add_api_route("/{id_key}", get_one, methods=["GET"], response_model=self.schema)
+        self.router.add_api_route("/", create, methods=["POST"], response_model=self.schema, status_code=status.HTTP_201_CREATED)
+        self.router.add_api_route("/{id_key}", update, methods=["PUT"], response_model=self.schema)
+        self.router.add_api_route("/{id_key}", delete, methods=["DELETE"], status_code=status.HTTP_204_NO_CONTENT)

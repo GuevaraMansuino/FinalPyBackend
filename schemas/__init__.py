@@ -1,18 +1,41 @@
-from schemas.address_schema import AddressSchema
-from schemas.bill_schema import BillSchema
-from schemas.category_schema import CategorySchema
-from schemas.client_schema import ClientSchema
-from schemas.order_detail_schema import OrderDetailSchema
-from schemas.order_schema import OrderSchema
-from schemas.product_schema import ProductSchema
-from schemas.review_schema import ReviewSchema
+"""
+Schemas Package Initialization
 
-AddressSchema.model_rebuild()
-ClientSchema.model_rebuild()
-OrderSchema.model_rebuild()
-ProductSchema.model_rebuild()
-OrderDetailSchema.model_rebuild()
-ReviewSchema.model_rebuild()
-CategorySchema.model_rebuild()
-BillSchema.model_rebuild()
+This file makes the schemas directory a Python package and exposes
+the main schema classes for easier importing throughout the application.
 
+Instead of:
+from schemas.product_schema import ProductSchemaOut
+
+You can use:
+from schemas import ProductSchemaOut
+"""
+
+# Base Schema
+from .base_schema import BaseSchema
+
+# Category Schemas
+from .category_schema import CategoryBase, CategoryCreateSchema, CategorySchema
+
+# Product Schemas
+from .product_schema import ProductSchemaBase, ProductCreateSchema, ProductSchemaOut
+
+# Client Schemas
+from .client_schema import ClientSchemaBase, ClientCreateSchema, ClientSchema
+
+# Address Schemas
+from .address_schema import AddressSchemaBase, AddressCreateSchema, AddressSchema
+
+# Bill Schemas
+from .bill_schema import BillSchemaBase, BillCreateSchema, BillSchema
+
+# Order Schemas
+from .order_schema import OrderSchemaBase, OrderCreateSchema, OrderSchema
+
+# OrderDetail Schemas
+from .order_detail_schema import OrderDetailSchemaBase, OrderDetailCreateSchema, OrderDetailSchema
+
+# Review Schemas
+from .review_schema import ReviewSchemaBase, ReviewCreateSchema, ReviewSchema
+
+# You can continue to add other schemas here as you create them

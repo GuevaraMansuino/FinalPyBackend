@@ -11,13 +11,6 @@ class ProductController(BaseControllerImpl):
         super().__init__(
             schema=ProductSchemaOut,
             service_factory=lambda db: ProductService(db),
-            tags=["Products"]
+            tags=["Products"],
+            create_schema=ProductCreateSchema
         )
-
-        @self.router.post("/", response_model=ProductSchemaOut, status_code=status.HTTP_201_CREATED)
-        async def create_product(schema_in: ProductCreateSchema, db: Session = Depends(get_db)):
-            service = self.service_factory(db)
-            product_model = service.save(schema_in)
-            if product_model is None:
-                raise HTTPException(status_code=500, detail="Error saving product")
-            return ProductSchemaOut.model_validate(product_model)

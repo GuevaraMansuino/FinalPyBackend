@@ -11,10 +11,6 @@ class CategoryController(BaseControllerImpl):
         super().__init__(
             schema=CategorySchema,
             service_factory=lambda db: CategoryService(db),
-            tags=["Categories"]
+            tags=["Categories"],
+            create_schema=CategoryCreateSchema
         )
-
-        @self.router.post("/", response_model=CategorySchema, status_code=status.HTTP_201_CREATED)
-        async def create(schema_in: CategoryCreateSchema, db: Session = Depends(get_db)):
-            service = self.service_factory(db)
-            return service.save(schema_in)
