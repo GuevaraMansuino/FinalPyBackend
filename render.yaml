@@ -24,7 +24,7 @@ services:
       - key: LOG_LEVEL
         value: INFO
       - key: CORS_ORIGINS
-        value: https://vercel.com/guevaramansuinos-projects/vite-react/m6Kck2jPxsmPtcDF636hM3g7qfjc  # Replace with your Vercel domain
+        value: http://localhost:3000,https://vercel.com/guevaramansuinos-projects/vite-react/m6Kck2jPxsmPtcDF636hM3g7qfjc  # Allow localhost:3000 and Vercel domain
       - key: RATE_LIMIT_ENABLED
         value: true
       - key: RATE_LIMIT_CALLS

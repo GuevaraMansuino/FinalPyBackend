@@ -29,7 +29,7 @@ class CategoryService(BaseServiceImpl):
         # Categories change rarely, so longer TTL (1 hour)
         self.cache_ttl = 3600
 
-    def get_all(self, skip: int = 0, limit: int = 100) -> List[CategorySchema]:
+    def get_all(self, skip: int = 0, limit: int = 100) -> List[CategoryModel]:
         """
         Get all categories with long-lived cache
 
@@ -47,19 +47,19 @@ class CategoryService(BaseServiceImpl):
         cached_categories = self.cache.get(cache_key)
         if cached_categories is not None:
             logger.debug(f"Cache HIT: {cache_key}")
-            return [CategorySchema(**c) for c in cached_categories]
+            return [CategoryModel(**c) for c in cached_categories]
 
         # Cache miss
         logger.debug(f"Cache MISS: {cache_key}")
         categories = super().get_all(skip, limit)
 
         # Cache with longer TTL
-        categories_dict = [c.model_dump() for c in categories]
+        categories_dict = [c.__dict__ for c in categories]
         self.cache.set(cache_key, categories_dict, ttl=self.cache_ttl)
 
         return categories
 
-    def get_one(self, id_key: int) -> CategorySchema:
+    def get_one(self, id_key: int) -> CategoryModel:
         """
         Get single category by ID with caching
 
@@ -71,12 +71,12 @@ class CategoryService(BaseServiceImpl):
         cached_category = self.cache.get(cache_key)
         if cached_category is not None:
             logger.debug(f"Cache HIT: {cache_key}")
-            return CategorySchema(**cached_category)
+            return CategoryModel(**cached_category)
 
         logger.debug(f"Cache MISS: {cache_key}")
         category = super().get_one(id_key)
 
-        self.cache.set(cache_key, category.model_dump(), ttl=self.cache_ttl)
+        self.cache.set(cache_key, category.__dict__, ttl=self.cache_ttl)
 
         return category
 
@@ -84,7 +84,7 @@ class CategoryService(BaseServiceImpl):
         """Create new category and invalidate cache"""
         category = super().save(schema)
         self._invalidate_all_cache()
-        return category
+        return CategorySchema.model_validate(category)
 
     def update(self, id_key: int, schema: CategorySchema) -> CategorySchema:
         """
@@ -109,7 +109,7 @@ class CategoryService(BaseServiceImpl):
             self._invalidate_all_cache()
 
             logger.info(f"Category {id_key} updated and cache invalidated successfully")
-            return category
+            return CategorySchema.model_validate(category)
 
         except Exception as e:
             # If update fails, cache remains consistent (no invalidation)

@@ -49,7 +49,8 @@ class BaseControllerImpl(BaseController):
         ):
             """Get all records with pagination."""
             service = self.service_factory(db)
-            return service.get_all(skip=skip, limit=limit)
+            models = service.get_all(skip=skip, limit=limit)
+            return [self.schema.model_validate(model) for model in models]
 
         async def get_one(
             id_key: int,
@@ -57,7 +58,8 @@ class BaseControllerImpl(BaseController):
         ):
             """Get a single record by ID."""
             service = self.service_factory(db)
-            return service.get_one(id_key)
+            model = service.get_one(id_key)
+            return self.schema.model_validate(model)
 
         async def create(
             schema_in: self.create_schema, # type: ignore
@@ -65,7 +67,8 @@ class BaseControllerImpl(BaseController):
         ):
             """Create a new record."""
             service = self.service_factory(db)
-            return service.save(schema_in)
+            model = service.save(schema_in)
+            return self.schema.model_validate(model)
 
         async def update(
             id_key: int,
@@ -74,7 +77,8 @@ class BaseControllerImpl(BaseController):
         ):
             """Update an existing record."""
             service = self.service_factory(db)
-            return service.update(id_key, schema_in)
+            model = service.update(id_key, schema_in)
+            return self.schema.model_validate(model)
 
         async def delete(
             id_key: int,
