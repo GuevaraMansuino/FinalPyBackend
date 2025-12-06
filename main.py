@@ -85,11 +85,12 @@ def create_fastapi_app() -> FastAPI:
     fastapi_app.include_router(health_check_controller, prefix="/health_check")
 
     # CORS Configuration
-    cors_origins = os.getenv("CORS_ORIGINS", "*").split(",")
+    cors_origins_str = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+    cors_origins = [origin.strip() for origin in cors_origins_str.split(",") if origin.strip()]
     fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=cors_origins,
-        allow_credentials=False,
+        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )

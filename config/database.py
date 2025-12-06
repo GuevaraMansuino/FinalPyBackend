@@ -20,7 +20,9 @@ from models.review import ReviewModel  # noqa
 logger = logging.getLogger(__name__)
 
 # Load environment variables
-env_path = os.path.join(os.path.dirname(__file__), '../.env.example')
+env_path = os.path.join(os.path.dirname(__file__), '../.env')
+if not os.path.exists(env_path):
+    env_path = os.path.join(os.path.dirname(__file__), '../.env.example')
 load_dotenv(env_path)
 
 # =========================================================
