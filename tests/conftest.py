@@ -12,7 +12,7 @@ os.environ['POSTGRES_HOST'] = 'localhost'
 os.environ['POSTGRES_PORT'] = '5432'
 os.environ['POSTGRES_DB'] = 'test_db'
 os.environ['POSTGRES_USER'] = 'postgres'
-os.environ['POSTGRES_PASSWORD'] = 'postgres'
+os.environ['POSTGRES_PASSWORD'] = '29102005Gero'
 os.environ['REDIS_HOST'] = 'localhost'
 os.environ['REDIS_PORT'] = '6379'
 
