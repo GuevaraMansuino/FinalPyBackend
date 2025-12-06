@@ -81,9 +81,9 @@ class BaseRepositoryImpl(BaseRepository):
         """
         Apply changes on ORM instance and return ORM model instance.
         """
-        PROTECTED = {'id_key', '_sa_instance_state', '__class__', '__dict__'}
+        PROTECTED = {'id', '_sa_instance_state', '__class__', '__dict__'}
         try:
-            stmt = select(self.model).where(self.model.id_key == id_key)
+            stmt = select(self.model).where(self.model.id == id_key)
             instance = self.session.scalars(stmt).first()
             if instance is None:
                 raise InstanceNotFoundError(f"{self.model.__name__} with id {id_key} not found")
@@ -115,7 +115,7 @@ class BaseRepositoryImpl(BaseRepository):
 
     def remove(self, id_key: int) -> None:
         try:
-            stmt = select(self.model).where(self.model.id_key == id_key)
+            stmt = select(self.model).where(self.model.id == id_key)
             instance = self.session.scalars(stmt).first()
             if instance is None:
                 raise InstanceNotFoundError(f"{self.model.__name__} with id {id_key} not found")
