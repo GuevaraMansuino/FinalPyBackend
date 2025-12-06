@@ -67,6 +67,9 @@ class BaseServiceImpl(BaseService):
             # fallback: convertir por atributos
             changes = schema_in.__dict__
 
+        # Remove 'id' from changes to prevent updating the primary key
+        changes.pop('id', None)
+
         updated = self.repository.update(id_key, changes)
         return updated
 
