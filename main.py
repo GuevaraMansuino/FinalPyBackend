@@ -23,7 +23,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 from controllers.address_controller import AddressController
 from controllers.bill_controller import BillController
-from controllers.cart_controller import CartController
+from controllers.cart_controller import cart_controller
 from controllers.category_controller import CategoryController
 from controllers.client_controller import ClientController
 from controllers.order_controller import OrderController
