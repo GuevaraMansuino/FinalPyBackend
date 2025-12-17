@@ -38,11 +38,11 @@ class BaseServiceImpl(BaseService):
         """
         return self.repository.find_all(skip=skip, limit=limit)
 
-    def get_one(self, id_key: int):
+    def get_one(self, id: int):
         """
         Devuelve MODELO ORM.
         """
-        return self.repository.find(id_key)
+        return self.repository.find(id)
 
     def save(self, schema_in) -> BaseModel:
         """

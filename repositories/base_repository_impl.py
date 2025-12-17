@@ -77,16 +77,16 @@ class BaseRepositoryImpl(BaseRepository):
             self.logger.error(f"Error saving {self.model.__name__}: {e}")
             raise
 
-    def update(self, id_key: int, changes: dict):
+    def update(self, id: int, changes: dict):
         """
         Apply changes on ORM instance and return ORM model instance.
         """
         PROTECTED = {'id', '_sa_instance_state', '__class__', '__dict__'}
         try:
-            stmt = select(self.model).where(self.model.id == id_key)
+            stmt = select(self.model).where(self.model.id == id)
             instance = self.session.scalars(stmt).first()
             if instance is None:
-                raise InstanceNotFoundError(f"{self.model.__name__} with id {id_key} not found")
+                raise InstanceNotFoundError(f"{self.model.__name__} with id {id} not found")
 
             allowed_columns = {col.name for col in self.model.__table__.columns}
             for key, value in changes.items():
@@ -110,22 +110,22 @@ class BaseRepositoryImpl(BaseRepository):
             raise
         except Exception as e:
             self.session.rollback()
-            self.logger.error(f"Error updating {self.model.__name__} with id {id_key}: {e}")
+            self.logger.error(f"Error updating {self.model.__name__} with id {id}: {e}")
             raise
 
-    def remove(self, id_key: int) -> None:
+    def remove(self, id: int) -> None:
         try:
-            stmt = select(self.model).where(self.model.id == id_key)
+            stmt = select(self.model).where(self.model.id == id)
             instance = self.session.scalars(stmt).first()
             if instance is None:
-                raise InstanceNotFoundError(f"{self.model.__name__} with id {id_key} not found")
+                raise InstanceNotFoundError(f"{self.model.__name__} with id {id} not found")
             self.session.delete(instance)
             self.session.commit()
         except InstanceNotFoundError:
             raise
         except Exception as e:
             self.session.rollback()
-            self.logger.error(f"Error deleting {self.model.__name__} with id {id_key}: {e}")
+            self.logger.error(f"Error deleting {self.model.__name__} with id {id}: {e}")
             raise
 
     def save_all(self, models: List[BaseModel]) -> List:

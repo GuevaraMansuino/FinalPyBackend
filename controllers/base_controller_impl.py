@@ -53,12 +53,12 @@ class BaseControllerImpl(BaseController):
             return [self.schema.model_validate(model) for model in models]
 
         async def get_one(
-            id_key: int,
+            id: int,
             db: Session = Depends(get_db)
         ):
             """Get a single record by ID."""
             service = self.service_factory(db)
-            model = service.get_one(id_key)
+            model = service.get_one(id)
             return self.schema.model_validate(model)
 
         async def create(
@@ -71,26 +71,26 @@ class BaseControllerImpl(BaseController):
             return self.schema.model_validate(model)
 
         async def update(
-            id_key: int,
+            id: int,
             schema_in: self.schema, # type: ignore
             db: Session = Depends(get_db)
         ):
             """Update an existing record."""
             service = self.service_factory(db)
-            model = service.update(id_key, schema_in)
+            model = service.update(id, schema_in)
             return self.schema.model_validate(model)
 
         async def delete(
-            id_key: int,
+            id: int,
             db: Session = Depends(get_db)
         ):
             """Delete a record."""
             service = self.service_factory(db)
-            service.delete(id_key)
+            service.delete(id)
             return None
 
         self.router.add_api_route("/", get_all, methods=["GET"], response_model=List[self.schema])
-        self.router.add_api_route("/{id_key}", get_one, methods=["GET"], response_model=self.schema)
+        self.router.add_api_route("/{id}", get_one, methods=["GET"], response_model=self.schema)
         self.router.add_api_route("/", create, methods=["POST"], response_model=self.schema, status_code=status.HTTP_201_CREATED)
-        self.router.add_api_route("/{id_key}", update, methods=["PUT"], response_model=self.schema)
-        self.router.add_api_route("/{id_key}", delete, methods=["DELETE"], status_code=status.HTTP_204_NO_CONTENT)
+        self.router.add_api_route("/{id}", update, methods=["PUT"], response_model=self.schema)
+        self.router.add_api_route("/{id}", delete, methods=["DELETE"], status_code=status.HTTP_204_NO_CONTENT)
