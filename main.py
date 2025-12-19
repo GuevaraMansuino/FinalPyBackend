@@ -69,6 +69,15 @@ def create_fastapi_app() -> FastAPI:
             content={"message": "Database integrity error. Check for duplicate values or invalid references."},
         )
 
+    @fastapi_app.exception_handler(Exception)
+    async def general_exception_handler(request, exc):
+        """Handle all unhandled exceptions."""
+        logger.error(f"Unhandled exception: {exc}", exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"message": "Internal Server Error", "detail": str(exc)},
+        )
+
     client_controller = ClientController()
     fastapi_app.include_router(client_controller.router, prefix="/clients")
 
