@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette import status
 from starlette.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
 
 from config.logging_config import setup_logging
 from config.database import create_tables, engine
@@ -57,6 +58,15 @@ def create_fastapi_app() -> FastAPI:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={"message": str(exc)},
+        )
+
+    @fastapi_app.exception_handler(IntegrityError)
+    async def integrity_error_handler(request, exc):
+        """Handle database integrity errors (foreign key, unique constraint)."""
+        logger.error(f"Database integrity error: {exc}")
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"message": "Database integrity error. Check for duplicate values or invalid references."},
         )
 
     client_controller = ClientController()
