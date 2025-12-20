@@ -60,6 +60,15 @@ def create_fastapi_app() -> FastAPI:
             content={"message": str(exc)},
         )
 
+    @fastapi_app.exception_handler(ValueError)
+    async def value_error_handler(request, exc):
+        """Handle validation errors with 400 Bad Request."""
+        logger.warning(f"Validation error: {exc}")
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"message": str(exc)},
+        )
+
     @fastapi_app.exception_handler(IntegrityError)
     async def integrity_error_handler(request, exc):
         """Handle database integrity errors (foreign key, unique constraint)."""

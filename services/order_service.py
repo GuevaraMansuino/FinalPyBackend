@@ -49,9 +49,12 @@ class OrderService(BaseServiceImpl):
             logger.error(f"Client with id {schema.client_id} not found")
             raise InstanceNotFoundError(f"Client with id {schema.client_id} not found")
 
-        # Validate bill exists
+        # Validate bill exists and is not already associated with an order
         try:
-            self._bill_repository.find(schema.bill_id)
+            bill = self._bill_repository.find(schema.bill_id)
+            if bill.order is not None:
+                logger.error(f"Bill with id {schema.bill_id} is already associated with an order")
+                raise ValueError(f"Bill with id {schema.bill_id} is already associated with an order")
         except InstanceNotFoundError:
             logger.error(f"Bill with id {schema.bill_id} not found")
             raise InstanceNotFoundError(f"Bill with id {schema.bill_id} not found")
