@@ -28,7 +28,7 @@ class OrderService(BaseServiceImpl):
         self._client_repository = ClientRepository(db)
         self._bill_repository = BillRepository(db)
 
-    def save(self, schema: OrderSchema) -> OrderSchema:
+    def save(self, schema: OrderSchema) -> OrderModel:
         """
         Create a new order with validation
 
@@ -67,7 +67,7 @@ class OrderService(BaseServiceImpl):
         logger.info(f"Creating order for client {schema.client_id}")
         return super().save(schema)
 
-    def update(self, id_key: int, schema: OrderSchema) -> OrderSchema:
+    def update(self, id_key: int, schema: OrderSchema) -> OrderModel:
         """
         Update an order with validation
 
