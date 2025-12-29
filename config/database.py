@@ -59,9 +59,27 @@ MAX_OVERFLOW = int(os.getenv('DB_MAX_OVERFLOW', '100'))  # Additional connection
 POOL_TIMEOUT = int(os.getenv('DB_POOL_TIMEOUT', '10'))  # Wait time for connection (reduced for production)
 POOL_RECYCLE = int(os.getenv('DB_POOL_RECYCLE', '3600'))  # Recycle connections after 1 hour
 
+# =========================================================
+# SSL CONFIGURATION FOR RENDER POSTGRESQL
+# =========================================================
+# Detectar si estamos en Render (tiene DATABASE_URL de Render)
+is_render = DATABASE_URL and 'render.com' in DATABASE_URL
+
+# Configurar SSL según el entorno
+if is_render:
+    connect_args = {
+        "sslmode": "require",
+        "connect_timeout": 10
+    }
+    logger.info("✅ Configuración SSL habilitada para Render PostgreSQL")
+else:
+    connect_args = {}
+    logger.info("✅ Configuración local sin SSL")
+
 # Create engine with optimized connection pooling for high concurrency
 engine = create_engine(
     DATABASE_URI,
+    connect_args=connect_args,  # ← AGREGADO: Configuración SSL
     pool_pre_ping=True,  # Verify connections before using (prevents stale connections)
     pool_size=POOL_SIZE,  # Minimum number of connections in pool
     max_overflow=MAX_OVERFLOW,  # Additional connections beyond pool_size
