@@ -111,6 +111,9 @@ def create_fastapi_app() -> FastAPI:
     category_controller = CategoryController()
     fastapi_app.include_router(category_controller.router, prefix="/categories")
 
+    # ✅ AGREGADO: Registrar cart_controller
+    fastapi_app.include_router(cart_controller.router, prefix="/cart")
+
     fastapi_app.include_router(health_check_controller, prefix="/health_check")
 
     # CORS Configuration
@@ -145,7 +148,7 @@ def create_fastapi_app() -> FastAPI:
         if check_redis_connection():
             logger.info("✅ Redis cache is available")
         else:
-            logger.warning("⚠️  Redis cache is NOT available - running without cache")
+            logger.warning("⚠️  Redis cache is NOT available - running without cache")
 
     # Shutdown event: Graceful shutdown
     @fastapi_app.on_event("shutdown")
