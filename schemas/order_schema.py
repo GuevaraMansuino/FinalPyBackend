@@ -14,7 +14,7 @@ class OrderSchemaBase(BaseSchema):
     delivery_method: DeliveryMethod = Field(..., description="Delivery method (required)")
     status: Status = Field(default=Status.PENDING, description="Order status")
     client_id: int = Field(..., description="Client ID reference (required)")
-    bill_id: int = Field(..., description="Bill ID reference (required)")
+    bill_id: Optional[int] = Field(None, description="Bill ID reference (optional)")  # ✅ CAMBIADO: Ahora es opcional
 
 
 class OrderCreateSchema(OrderSchemaBase):
@@ -25,5 +25,3 @@ class OrderCreateSchema(OrderSchemaBase):
 class OrderSchema(OrderSchemaBase, BaseSchemaWithId):
     """Schema for representing an order in API responses (output)."""
     id: int
-
-
