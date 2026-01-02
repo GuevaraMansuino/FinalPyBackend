@@ -34,21 +34,21 @@ class BaseRepositoryImpl(BaseRepository):
     def schema(self) -> Type[BaseSchema]:
         return self._schema
 
-    def find(self, id_key: int):
+    def find(self, id: int):
         """
         Return ORM model instance or raise InstanceNotFoundError.
         NOTA: NO convertimos a schema aquí (evita recursion loop).
         """
         try:
-            stmt = select(self.model).where(self.model.id_key == id_key)
+            stmt = select(self.model).where(self.model.id == id)
             instance = self.session.scalars(stmt).first()
             if instance is None:
-                raise InstanceNotFoundError(f"{self.model.__name__} with id {id_key} not found")
+                raise InstanceNotFoundError(f"{self.model.__name__} with id {id} not found")
             return instance
         except InstanceNotFoundError:
             raise
         except Exception as e:
-            self.logger.error(f"Error finding {self.model.__name__} with id {id_key}: {e}")
+            self.logger.error(f"Error finding {self.model.__name__} with id {id}: {e}")
             raise
 
     def find_all(self, skip: int = 0, limit: int = 100) -> List:
