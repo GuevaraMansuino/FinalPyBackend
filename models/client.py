@@ -5,11 +5,8 @@ from models.base_model import BaseModel
 
 class ClientModel(BaseModel):
     __tablename__ = "clients"
-
-    # ✅ SOLUCIÓN AL ERROR:
-    # Definimos id_key apuntando al id del BaseModel.
-    # Esto permite que el repositorio encuentre el cliente usando .where(model.id_key == ...)
-    id_key = BaseModel.id
+    
+    
 
     name = Column(String, index=True)
     lastname = Column(String, index=True)
