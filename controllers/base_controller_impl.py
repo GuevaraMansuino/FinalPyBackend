@@ -89,8 +89,13 @@ class BaseControllerImpl(BaseController):
             service.delete(id)
             return None
 
+        self.router.add_api_route("", get_all, methods=["GET"], response_model=List[self.schema])
         self.router.add_api_route("/", get_all, methods=["GET"], response_model=List[self.schema])
+
         self.router.add_api_route("/{id}", get_one, methods=["GET"], response_model=self.schema)
+        
+        self.router.add_api_route("", create, methods=["POST"], response_model=self.schema, status_code=status.HTTP_201_CREATED)
         self.router.add_api_route("/", create, methods=["POST"], response_model=self.schema, status_code=status.HTTP_201_CREATED)
+        
         self.router.add_api_route("/{id}", update, methods=["PUT"], response_model=self.schema)
         self.router.add_api_route("/{id}", delete, methods=["DELETE"], status_code=status.HTTP_204_NO_CONTENT)
