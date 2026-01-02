@@ -8,7 +8,7 @@ from repositories.order_detail_repository import OrderDetailRepository
 from repositories.order_repository import OrderRepository
 from repositories.product_repository import ProductRepository
 from repositories.base_repository_impl import InstanceNotFoundError
-from schemas.order_detail_schema import OrderDetailSchema
+from schemas.order_detail_schema import OrderDetailSchema, OrderDetailCreateSchema
 from services.base_service_impl import BaseServiceImpl
 from utils.logging_utils import get_sanitized_logger
 
@@ -28,98 +28,70 @@ class OrderDetailService(BaseServiceImpl):
         self._order_repository = OrderRepository(db)
         self._product_repository = ProductRepository(db)
 
-    def save(self, schema: OrderDetailSchema) -> OrderDetailSchema:
-        """
-        Create a new order detail with validation and atomic stock management
-
-        This method uses pessimistic locking (SELECT FOR UPDATE) to prevent
-        race conditions when multiple requests try to purchase the same product
-        simultaneously.
-
-        Args:
-            schema: Order detail data to create
-
-        Returns:
-            Created order detail
-
-        Raises:
-            InstanceNotFoundError: If order or product doesn't exist
-            ValueError: If stock is insufficient or validation fails
-        """
+    def save(self, schema: OrderDetailCreateSchema) -> OrderDetailSchema:
         from sqlalchemy import select
 
-        # Validate order exists
+        # 1️⃣ Validate order exists
+        self._order_repository.find(schema.order_id)
+
         try:
-            self._order_repository.find(schema.order_id)
-        except InstanceNotFoundError:
-            logger.error(f"Order with id {schema.order_id} not found")
-            raise InstanceNotFoundError(f"Order with id {schema.order_id} not found")
+            # 2️⃣ Lock product row
+            stmt = (
+                select(ProductModel)
+                .where(ProductModel.id_key == schema.product_id)
+                .with_for_update()
+            )
 
-        # Use pessimistic locking to prevent race conditions
-        # SELECT FOR UPDATE locks the row until transaction completes
-        try:
-            stmt = select(ProductModel).where(
-                ProductModel.id_key == schema.product_id
-            ).with_for_update()
+            product = self._product_repository.session.execute(stmt).scalar_one_or_none()
 
-            product_model = self._product_repository.session.execute(stmt).scalar_one_or_none()
-
-            if product_model is None:
-                logger.error(f"Product with id {schema.product_id} not found")
-                raise InstanceNotFoundError(f"Product with id {schema.product_id} not found")
-
-            # Validate stock availability (now with exclusive lock)
-            if product_model.stock < schema.quantity:
-                logger.error(
-                    f"Insufficient stock for product {schema.product_id}: "
-                    f"requested {schema.quantity}, available {product_model.stock}"
+            if not product:
+                raise InstanceNotFoundError(
+                    f"Product with id {schema.product_id} not found"
                 )
+
+            # 3️⃣ Validate stock
+            if product.stock < schema.quantity:
                 raise ValueError(
                     f"Insufficient stock for product {schema.product_id}. "
-                    f"Requested: {schema.quantity}, Available: {product_model.stock}"
+                    f"Requested {schema.quantity}, available {product.stock}"
                 )
 
-            # Set price from product if not provided
-            if schema.price is None:
-                schema.price = product_model.price
-                logger.info(f"Using product price: {product_model.price}")
+            # 4️⃣ Determine final price (backend authoritative)
+            final_price = schema.price if schema.price is not None else product.price
 
-            # Validate price matches product price (prevent price manipulation)
-            if abs(schema.price - product_model.price) > 0.01:
-                logger.warning(
-                    f"Price mismatch for product {schema.product_id}: "
-                    f"schema={schema.price}, product={product_model.price}"
-                )
+            if abs(final_price - product.price) > 0.01:
                 raise ValueError(
-                    f"Price mismatch. Expected {product_model.price}, got {schema.price}"
+                    f"Price mismatch. Expected {product.price}, got {final_price}"
                 )
 
-            # Atomically deduct stock and create order detail in same transaction
-            product_model.stock -= schema.quantity
-            logger.info(
-                f"Stock deducted for product {schema.product_id}: "
-                f"new stock = {product_model.stock}"
+            # 5️⃣ Deduct stock
+            product.stock -= schema.quantity
+
+            # 6️⃣ Create order detail
+            order_detail = OrderDetailModel(
+                order_id=schema.order_id,
+                product_id=schema.product_id,
+                quantity=schema.quantity,
+                price=final_price
             )
 
-            # Create order detail (same transaction)
-            logger.info(f"Creating order detail for order {schema.order_id}")
-            result = super().save(schema)
+            self._repository.session.add(order_detail)
 
-            # Both operations commit together automatically
-            # If either fails, both rollback
+            # 7️⃣ Single atomic commit
+            self._repository.session.commit()
+            self._repository.session.refresh(order_detail)
+
             logger.info(
-                f"Order detail created successfully with atomic stock update"
+                f"OrderDetail created (order={schema.order_id}, product={schema.product_id})"
             )
 
-            return result
+            return OrderDetailSchema.model_validate(order_detail)
 
-        except InstanceNotFoundError:
+        except Exception:
+            self._repository.session.rollback()
+            logger.exception("Error creating order detail")
             raise
-        except ValueError:
-            raise
-        except Exception as e:
-            logger.error(f"Error creating order detail: {e}")
-            raise
+
 
     def update(self, id_key: int, schema: OrderDetailSchema) -> OrderDetailSchema:
         """
