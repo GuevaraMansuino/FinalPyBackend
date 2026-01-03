@@ -38,7 +38,7 @@ class OrderDetailService(BaseServiceImpl):
             # 2️⃣ Lock product row
             stmt = (
                 select(ProductModel)
-                .where(ProductModel.id_key == schema.product_id)
+                .where(ProductModel.id == schema.product_id)
                 .with_for_update()
             )
 
@@ -93,7 +93,7 @@ class OrderDetailService(BaseServiceImpl):
             raise
 
 
-    def update(self, id_key: int, schema: OrderDetailSchema) -> OrderDetailSchema:
+    def update(self, id: int, schema: OrderDetailSchema) -> OrderDetailSchema:
         """
         Update an order detail with validation and atomic stock management
 
@@ -101,7 +101,7 @@ class OrderDetailService(BaseServiceImpl):
         race conditions when updating quantities concurrently.
 
         Args:
-            id_key: Order detail ID
+            id: Order detail ID
             schema: Updated order detail data
 
         Returns:
@@ -114,7 +114,7 @@ class OrderDetailService(BaseServiceImpl):
         from sqlalchemy import select
 
         # Get existing order detail to restore stock if quantity changes
-        existing = self._repository.find(id_key)
+        existing = self._repository.find(id)
 
         # Validate order exists if being updated
         if schema.order_id is not None:
@@ -131,7 +131,7 @@ class OrderDetailService(BaseServiceImpl):
             # 🔒 Use SELECT FOR UPDATE to lock the product row
             try:
                 stmt = select(ProductModel).where(
-                    ProductModel.id_key == product_id
+                    ProductModel.id == product_id
                 ).with_for_update()
 
                 product_model = self._product_repository.session.execute(stmt).scalar_one_or_none()
@@ -170,10 +170,10 @@ class OrderDetailService(BaseServiceImpl):
                 logger.error(f"Error updating stock for product {product_id}: {e}")
                 raise
 
-        logger.info(f"Updating order detail {id_key}")
-        return super().update(id_key, schema)
+        logger.info(f"Updating order detail {id}")
+        return super().update(id, schema)
 
-    def delete(self, id_key: int) -> None:
+    def delete(self, id: int) -> None:
         """
         Delete an order detail and restore stock atomically
 
@@ -181,7 +181,7 @@ class OrderDetailService(BaseServiceImpl):
         race conditions when restoring stock during concurrent deletes.
 
         Args:
-            id_key: Order detail ID to delete
+            id: Order detail ID to delete
 
         Raises:
             InstanceNotFoundError: If order detail or product doesn't exist
@@ -189,12 +189,12 @@ class OrderDetailService(BaseServiceImpl):
         from sqlalchemy import select
 
         # Get order detail to restore stock
-        order_detail = self._repository.find(id_key)
+        order_detail = self._repository.find(id)
 
         # 🔒 Use SELECT FOR UPDATE to lock the product row before restoring stock
         try:
             stmt = select(ProductModel).where(
-                ProductModel.id_key == order_detail.product_id
+                ProductModel.id == order_detail.product_id
             ).with_for_update()
 
             product_model = self._product_repository.session.execute(stmt).scalar_one_or_none()
@@ -214,8 +214,8 @@ class OrderDetailService(BaseServiceImpl):
             )
 
             # Delete order detail (same transaction)
-            logger.info(f"Deleting order detail {id_key}")
-            super().delete(id_key)
+            logger.info(f"Deleting order detail {id}")
+            super().delete(id)
 
             # Both operations commit together automatically
             # If either fails, both rollback
@@ -223,5 +223,5 @@ class OrderDetailService(BaseServiceImpl):
         except InstanceNotFoundError:
             raise
         except Exception as e:
-            logger.error(f"Error deleting order detail {id_key}: {e}")
+            logger.error(f"Error deleting order detail {id}: {e}")
             raise

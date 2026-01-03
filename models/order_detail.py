@@ -7,6 +7,7 @@ from models.base_model import BaseModel
 class OrderDetailModel(BaseModel):
     __tablename__ = "order_details"
 
+    id = Column(Integer, primary_key=True, index=True)
     quantity = Column(Integer)
     price = Column(Float)
     order_id = Column(Integer, ForeignKey("orders.id"), index=True)
