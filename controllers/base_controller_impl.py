@@ -72,7 +72,7 @@ class BaseControllerImpl(BaseController):
 
         async def update(
             id: int,
-            schema_in: self.schema, # type: ignore
+            schema_in: self.create_schema, # type: ignore
             db: Session = Depends(get_db)
         ):
             """Update an existing record."""
