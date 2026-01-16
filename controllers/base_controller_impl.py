@@ -45,11 +45,12 @@ class BaseControllerImpl(BaseController):
         async def get_all(
             skip: int = 0,
             limit: int = 100,
+            client_id: int = None,
             db: Session = Depends(get_db)
         ):
             """Get all records with pagination."""
             service = self.service_factory(db)
-            models = service.get_all(skip=skip, limit=limit)
+            models = service.get_all(skip=skip, limit=limit, client_id=client_id)
             return [self.schema.model_validate(model) for model in models]
 
         async def get_one(

@@ -32,11 +32,11 @@ class BaseServiceImpl(BaseService):
         return self._model
 
     # --- Métodos CRUD devuelven MODELOS ORM (no schemas) ---
-    def get_all(self, skip: int = 0, limit: int = 100) -> List:
+    def get_all(self, skip: int = 0, limit: int = 100, client_id: int = None) -> List:
         """
         Devuelve lista de MODELOS ORM.
         """
-        return self.repository.find_all(skip=skip, limit=limit)
+        return self.repository.find_all(skip=skip, limit=limit, client_id=client_id)
 
     def get_one(self, id: int):
         """

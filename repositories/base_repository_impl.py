@@ -51,12 +51,14 @@ class BaseRepositoryImpl(BaseRepository):
             self.logger.error(f"Error finding {self.model.__name__} with id {id}: {e}")
             raise
 
-    def find_all(self, skip: int = 0, limit: int = 100) -> List:
+    def find_all(self, skip: int = 0, limit: int = 100, client_id: int = None) -> List:
         """
         Return list of ORM model instances (no validation here).
         """
         try:
             stmt = select(self.model).offset(skip).limit(limit)
+            if client_id is not None and hasattr(self.model, 'client_id'):
+                stmt = stmt.where(self.model.client_id == client_id)
             models = self.session.scalars(stmt).all()
             return models
         except Exception as e:
