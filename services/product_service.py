@@ -32,7 +32,7 @@ class ProductService(BaseServiceImpl):
     # ----------------------------------------------------------------------
     # GET ALL
     # ----------------------------------------------------------------------
-    def get_all(self, skip: int = 0, limit: int = 100) -> List[ProductSchemaOut]:
+    def get_all(self, skip: int = 0, limit: int = 100, client_id: int = None) -> List[ProductSchemaOut]:
         cache_key = self.cache.build_key(
             self.cache_prefix, "list", skip=skip, limit=limit
         )
