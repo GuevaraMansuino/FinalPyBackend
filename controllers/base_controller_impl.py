@@ -20,7 +20,8 @@ class BaseControllerImpl(BaseController):
         schema: Type[BaseSchema],
         service_factory: Callable[[Session], 'BaseService'], # type: ignore
         tags: List[str] = None,
-        create_schema: Type[BaseSchema] = None
+        create_schema: Type[BaseSchema] = None,
+        update_schema: Type[BaseSchema] = None
     ):
         """
         Initialize the controller with dependency injection support.
@@ -30,9 +31,11 @@ class BaseControllerImpl(BaseController):
             service_factory: A callable that creates a service instance given a DB session
             tags: Optional list of tags for API documentation
             create_schema: Optional schema for create operations (defaults to schema)
+            update_schema: Optional schema for update operations (defaults to schema)
         """
         self.schema = schema
         self.create_schema = create_schema or schema
+        self.update_schema = update_schema or schema
         self.service_factory = service_factory
         self.router = APIRouter(tags=tags or [])
 

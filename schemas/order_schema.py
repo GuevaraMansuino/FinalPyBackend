@@ -22,6 +22,16 @@ class OrderCreateSchema(OrderSchemaBase):
     pass
 
 
+class OrderUpdateSchema(BaseSchema):
+    """Schema for updating an order (partial updates allowed)."""
+    date: Optional[datetime] = Field(None, description="Order date")
+    total: Optional[float] = Field(None, ge=0, description="Total amount (must be >= 0)")
+    delivery_method: Optional[DeliveryMethod] = Field(None, description="Delivery method")
+    status: Optional[Status] = Field(None, description="Order status")
+    client_id: Optional[int] = Field(None, description="Client ID reference")
+    bill_id: Optional[int] = Field(None, description="Bill ID reference")
+
+
 class OrderSchema(OrderSchemaBase, BaseSchemaWithId):
     """Schema for representing an order in API responses (output)."""
     id: int

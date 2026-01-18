@@ -29,7 +29,7 @@ class CategoryService(BaseServiceImpl):
         # Categories change rarely, so longer TTL (1 hour)
         self.cache_ttl = 3600
 
-    def get_all(self, skip: int = 0, limit: int = 100, client_id: int = None) -> List[CategoryModel]:
+    def get_all(self, skip: int = 0, limit: int = 100) -> List[CategoryModel]:
         """
         Get all categories with long-lived cache
 
