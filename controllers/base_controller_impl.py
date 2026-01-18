@@ -53,7 +53,13 @@ class BaseControllerImpl(BaseController):
         ):
             """Get all records with pagination."""
             service = self.service_factory(db)
-            models = service.get_all(skip=skip, limit=limit, client_id=client_id)
+            # Check if service supports client_id filtering
+            import inspect
+            sig = inspect.signature(service.get_all)
+            if 'client_id' in sig.parameters:
+                models = service.get_all(skip=skip, limit=limit, client_id=client_id)
+            else:
+                models = service.get_all(skip=skip, limit=limit)
             return [self.schema.model_validate(model) for model in models]
 
         async def get_one(
@@ -76,7 +82,7 @@ class BaseControllerImpl(BaseController):
 
         async def update(
             id: int,
-            schema_in: self.create_schema, # type: ignore
+            schema_in: self.update_schema, # type: ignore
             db: Session = Depends(get_db)
         ):
             """Update an existing record."""
